@@ -1,19 +1,19 @@
+import { setupHooks, Web3Hooks } from "@hooks/web3/setupHooks";
 import { MetaMaskInpageProvider } from "@metamask/providers";
-import { Contract, providers } from "ethers";
+import { Web3Dependencies } from "@_types/hooks";
+import { Contract, ethers, providers } from "ethers";
 declare global{
     interface Window{
         ethereum: MetaMaskInpageProvider;
     }
 }
-export type Web3Params ={
-    ethereum: MetaMaskInpageProvider | null;
-    provider: providers.Web3Provider | null;
-    contract: Contract | null;
+type Nullable<T> = {
+    [P in keyof T] : T[P] | null
 }
-
 export type Web3State ={
     isLoading: boolean;
-} & Web3Params;
+    hooks: Web3Hooks
+} & Nullable<Web3Dependencies>;
 
 export const createDefaultState = () => {
     return{
@@ -21,5 +21,29 @@ export const createDefaultState = () => {
         provider: null,
         contract: null,
         isLoading: true,
+        hooks: setupHooks({} as any)
     }
+}
+
+export const createWeb3State = ({ethereum, provider, contract, isLoading} : Web3Dependencies & {isLoading : boolean}) => {
+    return{
+        ethereum,
+        provider,
+        contract,
+        isLoading,
+        hooks: setupHooks({ethereum, provider, contract})
+    }
+}
+const NetworkId = process.env.NEXT_PUBLIC_NETWORK_ID;
+export const loadContract = async (name: string, provider: providers.Web3Provider) : Promise<Contract>=> {
+    if(!NetworkId){
+        return Promise.reject("Network ID is undefined");
+    }
+    const res = await fetch(`/contracts/${name}.json`);
+    const Artifact = await res.json();
+    if(Artifact.networks[NetworkId].address){
+        const contract = new ethers.Contract(Artifact.networks[NetworkId].address, Artifact.abi, provider);
+        return contract;
+    }
+    return Promise.reject(`COntract: [${name}] cannot be loaded!`);
 }
