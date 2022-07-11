@@ -21,17 +21,17 @@ export const createDefaultState = () => {
         provider: null,
         contract: null,
         isLoading: true,
-        hooks: setupHooks({} as any)
+        hooks: setupHooks({isLoading: true} as any)
     }
 }
 
-export const createWeb3State = ({ethereum, provider, contract, isLoading} : Web3Dependencies & {isLoading : boolean}) => {
+export const createWeb3State = ({ethereum, provider, contract, isLoading} : Web3Dependencies) => {
     return{
         ethereum,
         provider,
         contract,
         isLoading,
-        hooks: setupHooks({ethereum, provider, contract})
+        hooks: setupHooks({ethereum, provider, contract, isLoading})
     }
 }
 const NetworkId = process.env.NEXT_PUBLIC_NETWORK_ID;
